@@ -12,11 +12,13 @@ Dann http://localhost:8742/ im Browser öffnen. JavaScript-Module und Service Wo
 
 ## Lernen
 
-- Thema wählen: ABC (26 Buchstaben), Klassenzimmer, Familie oder Tiere; alternativ alle Themen.
+- Thema wählen: ABC (26 Buchstaben zum Entdecken), Klassenzimmer, Familie oder Tiere; alternativ alle Themen.
 - Entdecken: Karte für Karte lesen, deutsche Bedeutung sehen und auf Wunsch Englisch oder Deutsch vorlesen lassen. Vorlesen verwendet die Systemstimmen des Browsers; ohne passende Stimme wird die Standardsprache des Geräts versucht. Ohne Web Speech geht es ohne Ton weiter.
-- Wörter-Quiz: Vier eindeutige Antworten, abwechselnd Englisch → Deutsch und Deutsch → Englisch.
-- Schreiben: Aus einer deutschen Vorgabe das englische Wort selbst schreiben; beim ABC drei folgende Buchstaben aufschreiben. Groß-/Kleinschreibung, extra Leerzeichen, typografische Apostrophe und abschließende Satzzeichen werden toleriert; fehlende Buchstaben oder Apostrophe nicht.
+- Wörter-Quiz: Vier eindeutige Antworten, abwechselnd Englisch → Deutsch und Deutsch → Englisch. ABC ist ausschließlich zum Entdecken und Anhören; bei ausgewähltem ABC gibt es keine Quiz-Buttons. „Alle Themen“ fragt nur Wörter ab.
+- Schreiben: Aus einer deutschen Vorgabe das englische Wort selbst schreiben. Groß-/Kleinschreibung, extra Leerzeichen, typografische Apostrophe und abschließende Satzzeichen werden toleriert; fehlende Buchstaben oder Apostrophe nicht.
 - Bunter Mix: Auswahl und Schreiben in einer Runde. Falsche Fragen werden innerhalb derselben Runde einmal wiederholt und bleiben unter „Noch mal üben“ verfügbar, bis sie richtig beantwortet werden. Kein Zeitlimit und kein Punktabzug.
+
+Alte gespeicherte ABC-Fortschritte bleiben erhalten (auch nach der Migration), aber ABC-Fehler erscheinen nicht mehr in „Noch mal üben“ und werden niemals als Frage gestellt.
 
 Bei manchen Wörtern gibt es mehrere mögliche Übersetzungen: Diese Liste verwendet bewusst genau eine einfache Schulbedeutung pro Eintrag. Beispielsweise ist „pen“ hier „Kugelschreiber“. Das Kind sollte andere richtige Bedeutungen nicht als falsch im allgemeinen Sprachgebrauch verstehen; die Schreibübung fragt immer die in der Liste angezeigte englische Form ab. Bei neuen Einträgen mehrdeutige Antwortpaare vermeiden.
 

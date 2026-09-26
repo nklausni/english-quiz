@@ -16,7 +16,7 @@ const title = (text, eyebrow = "DEIN LERNORT") => `<div class="section-heading">
 const labelGroup = (id) => id === "all" ? "Alle Themen" : GROUPS[id].title;
 
 function frame(body) {
-  app.innerHTML = `<div class="layout"><header class="site-header"><button type="button" class="brand" data-action="home" aria-label="Word Garden: zur Startseite"><span class="brand-mark" aria-hidden="true">✿</span><span>word<span class="brand-light">garden</span></span></button><span class="header-tag">ENGLISCH · GANZ IN RUHE</span></header><main id="main">${body}</main><footer class="site-footer">Kleine Schritte zählen. <span aria-hidden="true">✳</span> Alles bleibt auf diesem Gerät.</footer></div>`;
+  app.innerHTML = `<div class="layout${screen === "quiz" ? " quiz-layout" : ""}"><header class="site-header"><button type="button" class="brand" data-action="home" aria-label="Word Garden: zur Startseite"><span class="brand-mark" aria-hidden="true">✿</span><span>word<span class="brand-light">garden</span></span></button><span class="header-tag">ENGLISCH · GANZ IN RUHE</span></header><main id="main">${body}</main><footer class="site-footer">Kleine Schritte zählen. <span aria-hidden="true">✳</span> Alles bleibt auf diesem Gerät.</footer></div>`;
   if (screen !== "home") app.querySelector("#screen-title")?.focus({ preventScroll: true });
   window.scrollTo(0, 0);
 }
@@ -29,14 +29,16 @@ function home() {
   screen = "home";
   round = null;
   const known = Object.keys(store.state.stats).length;
-  const missed = store.missedIds.length;
+  const missed = store.missedIds.filter((id) => BY_ID.get(id)?.group !== "abc").length;
   frame(`<section class="hero"><span class="eyebrow">HELLO, LITTLE EXPLORER</span><div class="hero-art" aria-hidden="true"><span class="sun"></span><span class="stem"></span><span class="leaf one"></span><span class="leaf two"></span><span class="flower">✳</span></div><h1 id="screen-title">Wörter wachsen<br><em>mit dir.</em></h1><p>Ein Wort nach dem anderen. Such dir ein Thema aus und leg los!</p><div class="hero-progress"><span class="progress-icon" aria-hidden="true">✦</span><span><strong>${known} von ${ALL.length}</strong> Wörtern entdeckt</span></div></section>
     <section class="home-section"><div class="section-row"><h2>Was möchtest du üben?</h2><span class="section-count">03 THEMEN + ABC</span></div>${pickGroup()}
-    <div class="mode-grid"><button class="mode-card learn" data-action="learn"><span class="mode-icon" aria-hidden="true">☼</span><span class="mode-text"><strong>Entdecken</strong><small>Wörter lesen & anhören</small></span><span class="arrow" aria-hidden="true">↗</span></button>
+    ${group === "abc" ? `<p class="abc-note">ABC ist nur zum Entdecken und Anhören da – Quizfragen gibt es nur zu Wörtern.</p>` : ""}
+    <div class="mode-grid${group === "abc" ? " abc-only" : ""}"><button class="mode-card learn" data-action="learn"><span class="mode-icon" aria-hidden="true">☼</span><span class="mode-text"><strong>Entdecken</strong><small>${group === "abc" ? "Buchstaben" : "Wörter"} lesen & anhören</small></span><span class="arrow" aria-hidden="true">↗</span></button>
+    ${group === "abc" ? "" : `
     <button class="mode-card choose" data-action="start" data-value="choice"><span class="mode-icon" aria-hidden="true">◎</span><span class="mode-text"><strong>Wörter-Quiz</strong><small>Aus 4 Antworten wählen</small></span><span class="arrow" aria-hidden="true">↗</span></button>
     <button class="mode-card spell" data-action="start" data-value="spelling"><span class="mode-icon" aria-hidden="true">✎</span><span class="mode-text"><strong>Schreiben</strong><small>Englische Wörter tippen</small></span><span class="arrow" aria-hidden="true">↗</span></button>
-    <button class="mode-card mixed" data-action="start" data-value="mixed"><span class="mode-icon" aria-hidden="true">✳</span><span class="mode-text"><strong>Bunter Mix</strong><small>Auswahl & Schreiben</small></span><span class="arrow" aria-hidden="true">↗</span></button></div>
-    ${missed ? `<button class="review" data-action="review"><span aria-hidden="true">↺</span><span><strong>Noch mal üben</strong><small>${missed} ${missed === 1 ? "Wort wartet" : "Wörter warten"} auf dich</small></span><span aria-hidden="true">→</span></button>` : ""}
+    <button class="mode-card mixed" data-action="start" data-value="mixed"><span class="mode-icon" aria-hidden="true">✳</span><span class="mode-text"><strong>Bunter Mix</strong><small>Auswahl & Schreiben</small></span><span class="arrow" aria-hidden="true">↗</span></button>`}</div>
+    ${group !== "abc" && missed ? `<button class="review" data-action="review"><span aria-hidden="true">↺</span><span><strong>Noch mal üben</strong><small>${missed} ${missed === 1 ? "Wort wartet" : "Wörter warten"} auf dich</small></span><span aria-hidden="true">→</span></button>` : ""}
     <p class="smallprint">Die Wortliste ist zum Üben zusammengestellt und stimmt nicht unbedingt mit deinem Schulbuch überein.</p>
     ${store.notice ? `<p class="notice" role="status">${escapeHTML(store.notice)}</p>` : ""}
     <button type="button" class="text-button reset" data-action="reset">Gespeicherten Fortschritt löschen</button></section>`);
@@ -50,8 +52,8 @@ function learn() {
   const abc = item.group === "abc";
   const progress = store.state.stats[item.id];
   frame(`<div class="subnav"><button class="back" data-action="home">← Zur Übersicht</button><span class="pill">${labelGroup(item.group)}</span></div>
-    ${title("Wörter entdecken", "LESEN · HÖREN · MERKEN")}
-    <div class="learn-progress"><span>WORT ${cardIndex + 1} / ${items.length}</span><span>${progress ? "Schon geübt ✓" : "Neu zu entdecken"}</span></div>
+    ${title(group === "abc" ? "Buchstaben entdecken" : "Wörter entdecken", "LESEN · HÖREN · MERKEN")}
+    <div class="learn-progress"><span>${abc ? "BUCHSTABE" : "WORT"} ${cardIndex + 1} / ${items.length}</span><span>${progress ? "Schon geübt ✓" : "Neu zu entdecken"}</span></div>
     <div class="meter" aria-hidden="true"><span style="width:${((cardIndex + 1) / items.length) * 100}%"></span></div>
     <article class="flashcard"><div class="flashcard-top"><span class="pill light">${labelGroup(item.group)}</span><span class="flash-symbol" aria-hidden="true">${GROUPS[item.group].icon}</span></div><span class="lang-label">${abc ? "BUCHSTABE" : "ENGLISCH"}</span><h2 lang="en">${escapeHTML(item.en)}</h2>${abc ? `<p class="letter-note">Klein geschrieben: <strong lang="en">${item.en.toLowerCase()}</strong> · Danach kommt <strong>${item.en === "Z" ? "wieder A" : String.fromCharCode(item.en.charCodeAt(0) + 1)}</strong>.</p>` : `<div class="translation"><span class="lang-label">DEUTSCH</span><p lang="de">${escapeHTML(item.de)}</p></div>`}
     <div class="speech-row"><button class="listen" data-action="speak" data-lang="en" data-text="${escapeHTML(item.en)}">◖)) <span>Englisch anhören</span></button>${!abc ? `<button class="listen subtle" data-action="speak" data-lang="de" data-text="${escapeHTML(item.de)}">◖)) <span>Deutsch anhören</span></button>` : ""}</div><p class="speech-status" role="status" id="speech-status"></p></article>
@@ -59,11 +61,10 @@ function learn() {
 }
 
 function start(mode, review = false) {
-  const ids = review ? store.missedIds : [];
+  const ids = review ? store.missedIds.filter((id) => BY_ID.get(id)?.group !== "abc") : [];
   const items = review ? ids.map((id) => BY_ID.get(id)).filter(Boolean) : [];
   if (review && !items.length) return home();
-  // Review pulls from all themes and can include ABC letters.
-  const questions = review ? items.slice(0, 8).map((item, index) => makeQuestion(item, { mode: "choice", direction: index % 2 ? "de-en" : "en-de", variant: index % 2 ? "order" : "identify" })) : createRound({ group, mode });
+  const questions = review ? items.slice(0, 8).map((item, index) => makeQuestion(item, { mode: "choice", direction: index % 2 ? "de-en" : "en-de" })) : createRound({ group, mode });
   round = { questions, index: 0, firstCount: questions.length, firstRight: 0, answered: false, retried: new Set(), mode: review ? "review" : mode };
   showQuestion();
 }
@@ -94,7 +95,7 @@ function answer(value) {
   store.record(q.id, right);
   if (!right && !round.retried.has(q.id)) {
     round.retried.add(q.id);
-    round.questions.push(makeQuestion(BY_ID.get(q.id), { mode: q.type, direction: q.direction === "en-de" ? "de-en" : "en-de", variant: q.group === "abc" ? "order" : "identify" }));
+    round.questions.push(makeQuestion(BY_ID.get(q.id), { mode: q.type, direction: q.direction === "en-de" ? "de-en" : "en-de" }));
   }
   app.querySelectorAll(".choice").forEach((button) => {
     button.disabled = true;
@@ -102,20 +103,23 @@ function answer(value) {
     if (text === q.answer) button.classList.add("is-right");
     else if (text === value) button.classList.add("is-wrong");
   });
+  const choiceGroup = app.querySelector(".choices");
+  if (choiceGroup) choiceGroup.hidden = true;
   const form = app.querySelector("#answer-form");
   if (form) {
     form.querySelector("input").disabled = true;
     form.querySelector("button").disabled = true;
+    form.hidden = true;
   }
   const feedback = app.querySelector("#feedback");
   feedback.innerHTML = `<div class="feedback ${right ? "good" : "try"}" tabindex="-1"><span class="feedback-icon" aria-hidden="true">${right ? "✓" : "↺"}</span><div><h2>${right ? "Genau richtig!" : "Gut versucht!"}</h2><p>${right ? `Das war ${escapeHTML(q.answer)}.` : `Die Antwort ist <strong>${escapeHTML(q.answer)}</strong>. ${round.index < round.firstCount ? "Du siehst die Frage gleich noch einmal." : "Du kannst das später noch einmal üben."}`}</p></div></div><button class="primary continue" data-action="continue">${round.index === round.questions.length - 1 ? "Zum Ergebnis" : "Weiter"} →</button>`;
-  feedback.querySelector(".feedback").focus();
+  feedback.querySelector(".feedback").focus({ preventScroll: true });
 }
 
 function result() {
   screen = "result";
   const { firstRight, firstCount } = round;
-  const missed = store.missedIds.length;
+  const missed = store.missedIds.filter((id) => BY_ID.get(id)?.group !== "abc").length;
   frame(`<div class="subnav"><button class="back" data-action="home">← Zur Übersicht</button></div><section class="result-card"><div class="result-art" aria-hidden="true">✿</div>${title("Gut geübt!", "RUNDE GESCHAFFT")}<p>Du hast ${firstRight} von ${firstCount} Fragen beim ersten Mal gewusst. Jedes geübte Wort zählt – auch wenn du es noch mal probiert hast.</p><div class="result-count"><strong>${Object.keys(store.state.stats).length}</strong><span>Wörter schon entdeckt</span></div>${missed ? `<button class="primary" data-action="review">${missed} ${missed === 1 ? "Wort" : "Wörter"} noch mal üben →</button>` : `<p class="all-clear">Für den Moment ist nichts mehr offen. ✨</p>`}<button class="secondary" data-action="home">Zur Übersicht</button></section>`);
 }
 
@@ -148,7 +152,7 @@ app.addEventListener("click", (event) => {
   else if (action === "learn") { cardIndex = 0; learn(); }
   else if (action === "prev") { cardIndex--; learn(); }
   else if (action === "next") { cardIndex++; learn(); }
-  else if (action === "start") start(button.dataset.value);
+  else if (action === "start" && group !== "abc") start(button.dataset.value);
   else if (action === "review") start("choice", true);
   else if (action === "answer") answer(round.questions[round.index].options[Number(button.dataset.value)]);
   else if (action === "continue" && round?.answered) { round.index++; showQuestion(); }

@@ -30,19 +30,18 @@ test("all word questions offer four distinct answers and both directions", () =>
   }
 });
 
-test("ABC identification, order, spelling and boundaries", () => {
-  for (const entry of LETTERS) for (const variant of ["identify", "order"]) {
-    const q = makeQuestion(entry, { variant });
-    assert.equal(q.options.length, 4);
-    assert.equal(new Set(q.options).size, 4);
-    assert.ok(q.options.includes(q.answer));
+test("ABC is discovery-only: letters cannot become quiz questions", () => {
+  for (const entry of LETTERS) for (const mode of ["choice", "spelling", "mixed"]) {
+    assert.throws(() => makeQuestion(entry, { mode }), /ABC.*nur.*Entdecken/i);
   }
-  assert.equal(makeQuestion(LETTERS[0], { variant: "order" }).answer, "B");
-  assert.equal(makeQuestion(LETTERS[25], { variant: "order" }).answer, "Y");
-  const spelling = makeQuestion(LETTERS[22], { mode: "spelling" });
-  assert.equal(spelling.answer, "X Y Z");
-  assert.ok(evaluate(spelling, "  x y z "));
-  assert.ok(!evaluate(spelling, "x z y"));
+  for (const mode of ["choice", "spelling", "mixed"]) {
+    assert.throws(() => createRound({ group: "abc", mode }), /ABC.*nur.*Entdecken/i);
+    const all = createRound({ group: "all", mode, size: ALL.length });
+    assert.equal(all.length, WORDS.length);
+    assert.ok(all.every((q) => q.group !== "abc"));
+    const review = createRound({ group: "all", mode, missed: [LETTERS[0].id, WORDS[0].id] });
+    assert.deepEqual(review.map((q) => q.id), [WORDS[0].id]);
+  }
 });
 
 test("spelling accepts casing, whitespace, curly apostrophe and terminal punctuation; not misspellings", () => {
@@ -57,7 +56,7 @@ test("spelling accepts casing, whitespace, curly apostrophe and terminal punctua
 });
 
 test("rounds use selected theme, mix modes and do not repeat initial items", () => {
-  for (const group of Object.keys(GROUPS)) for (const mode of ["choice", "spelling", "mixed"]) {
+  for (const group of ["classroom", "family", "animals"]) for (const mode of ["choice", "spelling", "mixed"]) {
     const round = createRound({ group, mode });
     assert.equal(round.length, 8);
     assert.equal(new Set(round.map((q) => q.id)).size, 8);
@@ -76,6 +75,8 @@ test("migration preserves known counts, drops unknown IDs and protects newer sch
   assert.ok(!("madeup" in old.stats));
   assert.equal(migrate({ schema: SCHEMA + 1 }), null);
   assert.deepEqual(migrate({ stats: { [id]: { attempts: -5, correct: 7 } } }).stats, {});
+  const letter = LETTERS[0].id;
+  assert.deepEqual(migrate({ schema: 1, stats: { [letter]: { seen: 3, right: 1, wrong: 2 } } }).stats[letter], { attempts: 3, correct: 1, missed: 2 });
 });
 
 test("persistence records, repeats missed words, resets, and survives corrupt or blocked storage", () => {
