@@ -1,6 +1,6 @@
 // Curated starter list, not a match to any particular school textbook.
 // One unambiguous classroom meaning per entry; add new stable IDs when editing.
-export const GROUPS = Object.freeze({ abc: { title: "ABC", icon: "Aa", subtitle: "Buchstaben & Reihenfolge" }, classroom: { title: "Im Klassenzimmer", icon: "✏", subtitle: "Dinge & kleine Sätze" }, family: { title: "Familie", icon: "♡", subtitle: "Menschen um dich herum" }, animals: { title: "Tiere", icon: "♣", subtitle: "Groß, klein, wild & zahm" } });
+export const GROUPS = Object.freeze({ classroom: { title: "Im Klassenzimmer", icon: "✏", subtitle: "Dinge & kleine Sätze" }, family: { title: "Familie", icon: "♡", subtitle: "Menschen um dich herum" }, animals: { title: "Tiere", icon: "♣", subtitle: "Groß, klein, wild & zahm" } });
 
 const rows = {
   classroom: [
@@ -38,6 +38,5 @@ const rows = {
   ]
 };
 export const WORDS = Object.freeze(Object.entries(rows).flatMap(([group, pairs]) => pairs.map(([en, de], index) => Object.freeze({ id: `${group}-${index + 1}`, group, en, de }))));
-export const LETTERS = Object.freeze(Array.from({ length: 26 }, (_, index) => Object.freeze({ id: `abc-${String.fromCharCode(97 + index)}`, group: "abc", en: String.fromCharCode(65 + index), de: String.fromCharCode(65 + index) })));
-export const ALL = Object.freeze([...LETTERS, ...WORDS]);
+export const ALL = WORDS;
 export const BY_ID = new Map(ALL.map((item) => [item.id, item]));

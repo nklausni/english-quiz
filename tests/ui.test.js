@@ -2,13 +2,13 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { KEY } from "../js/store.js";
-import { LETTERS, WORDS } from "../js/data.js";
+import { WORDS } from "../js/data.js";
 
 test("home → theme → learn → quiz → feedback → result and reset", async () => {
   const handlers = new Map();
   const saved = new Map();
   saved.set(KEY, JSON.stringify({ schema: 1, stats: {
-    [LETTERS[0].id]: { seen: 2, wrong: 2 }, [WORDS[0].id]: { seen: 1, wrong: 1 }
+    "abc-a": { seen: 2, wrong: 2 }, [WORDS[0].id]: { seen: 1, wrong: 1 }
   } }));
   const choices = { hidden: false };
   const form = { hidden: false, querySelector: () => ({ disabled: false }) };
@@ -41,15 +41,14 @@ test("home → theme → learn → quiz → feedback → result and reset", asyn
   }
   assert.match(app.innerHTML, /Wörter wachsen/);
   assert.match(app.innerHTML, /Schulbuch/);
-  click("group", "abc");
-  assert.match(app.innerHTML, /ABC.*nur.*Entdecken/s);
-  assert.match(app.innerHTML, /data-action="learn"/);
-  assert.doesNotMatch(app.innerHTML, /data-action="start"/);
-  assert.doesNotMatch(app.innerHTML, /data-action="review"/);
+  assert.doesNotMatch(app.innerHTML, /data-value="abc"|03 THEMEN \+ ABC/);
+  assert.match(app.innerHTML, /1 von 69/);
   click("learn");
-  assert.match(app.innerHTML, /BUCHSTABE/);
+  assert.match(app.innerHTML, /WORT 1 \/ 69/);
   assert.match(app.innerHTML, /Englisch anhören/);
+  assert.deepEqual(JSON.parse(saved.get(KEY)).discovered, [WORDS[0].id]);
   click("home");
+  assert.match(app.innerHTML, /1 von 69/);
   click("group", "all");
   assert.match(app.innerHTML, /1 Wort wartet/);
   click("review");
@@ -90,6 +89,46 @@ test("home → theme → learn → quiz → feedback → result and reset", asyn
   assert.equal(saved.size, 0);
 });
 
+test("discovery reaches a finish screen after its last word and keeps a completion route", async () => {
+  const handlers = new Map();
+  const saved = new Map();
+  const app = {
+    innerHTML: "",
+    addEventListener(name, fn) { handlers.set(name, fn); },
+    querySelector(selector) { return selector === "#screen-title" ? { focus() {} } : null; }
+  };
+  globalThis.document = { querySelector: () => app };
+  globalThis.window = {
+    localStorage: { getItem: (k) => saved.get(k) ?? null, setItem: (k,v) => saved.set(k,v), removeItem: (k) => saved.delete(k) },
+    scrollTo() {}
+  };
+  Object.defineProperty(globalThis, "navigator", { value: {}, configurable: true });
+  globalThis.location = { protocol: "http:", hostname: "example.invalid" };
+  await import("../js/app.js?discovery-finish");
+  const click = (action, value) => handlers.get("click")({ target: { dataset: { action, value }, disabled: false, closest() { return this; } } });
+  click("group", "animals");
+  click("learn");
+  for (let i = 1; i < WORDS.filter((word) => word.group === "animals").length; i++) click("next");
+  assert.match(app.innerHTML, /data-action="finish-learn"/);
+  click("finish-learn");
+  assert.match(app.innerHTML, /Entdecken abgeschlossen/);
+  assert.match(app.innerHTML, /23 von 23 Wörtern/);
+  assert.match(app.innerHTML, /data-action="home"/);
+  assert.match(app.innerHTML, /data-action="start" data-value="choice"/);
+  click("home");
+  assert.match(app.innerHTML, /23 von 69/);
+  assert.equal(JSON.parse(saved.get(KEY)).discovered.length, 23);
+});
+
+test("discovery layout keeps the finish action within a compact mobile card", () => {
+  const app = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
+  const css = readFileSync(new URL("../css/style.css", import.meta.url), "utf8");
+  assert.match(app, /screen === "learn" \? " learn-layout"/);
+  assert.match(css, /\.learn-layout\s+\.flashcard\s*\{[^}]*min-height:\s*0/);
+  assert.match(css, /\.learn-layout\s+\.card-nav\s*\{[^}]*margin-top:/);
+  assert.match(css, /@media\(max-width:359px\)[\s\S]*?\.learn-layout\s+\.flashcard\s*\{[^}]*padding:\s*12px/);
+});
+
 test("quiz viewport DOM/CSS contract: compact chrome, tappable options, collapsed answers and offline update", () => {
   const app = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
   const css = readFileSync(new URL("../css/style.css", import.meta.url), "utf8");
@@ -101,12 +140,12 @@ test("quiz viewport DOM/CSS contract: compact chrome, tappable options, collapse
   assert.match(css, /\.quiz-layout\s+\.choice\s*\{[^}]*min-height:\s*(?:48|[5-9]\d)px/);
   assert.match(css, /\.quiz-layout\s+\.question-card\s*\{[^}]*min-height:\s*(?:0|[1-9]\d)px/);
   assert.match(css, /\.quiz-layout\s+\.site-footer\s*\{[^}]*display:\s*none/);
-  assert.match(sw, /const VERSION = "word-garden-v2"/);
+  assert.match(sw, /const VERSION = "word-garden-v3"/);
 });
 
-test("legacy ABC-only misses remain stored but never offer review", async () => {
+test("legacy alphabet misses disappear from the app after migrating progress", async () => {
   const handlers = new Map();
-  const saved = new Map([[KEY, JSON.stringify({ schema: 1, stats: { [LETTERS[1].id]: { seen: 1, wrong: 1 } } })]]);
+  const saved = new Map([[KEY, JSON.stringify({ schema: 1, stats: { "abc-b": { seen: 1, wrong: 1 } } })]]);
   const app = { innerHTML: "", addEventListener(name, fn) { handlers.set(name, fn); }, querySelector() { return null; } };
   globalThis.document = { querySelector: () => app };
   globalThis.window = {
@@ -117,7 +156,11 @@ test("legacy ABC-only misses remain stored but never offer review", async () => 
   globalThis.location = { protocol: "http:", hostname: "example.invalid" };
   await import("../js/app.js?abc-only");
   assert.doesNotMatch(app.innerHTML, /data-action="review"/);
-  assert.equal(JSON.parse(saved.get(KEY)).stats[LETTERS[1].id].wrong, 1);
+  assert.match(app.innerHTML, /0 von 69/);
+  assert.doesNotMatch(app.innerHTML, /data-value="abc"/);
+  const learnButton = { dataset: { action: "learn" }, disabled: false, closest() { return this; } };
+  handlers.get("click")({ target: learnButton });
+  assert.equal(JSON.parse(saved.get(KEY)).stats["abc-b"], undefined);
   const button = { dataset: { action: "review" }, disabled: false, closest() { return this; } };
   handlers.get("click")({ target: button });
   assert.match(app.innerHTML, /Wörter wachsen/);

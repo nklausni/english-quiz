@@ -15,7 +15,6 @@ export function normalizeAnswer(value) {
 }
 
 export function evaluate(question, answer) {
-  if (question.group === "abc") throw new Error("ABC ist nur zum Entdecken und Anhören da.");
   if (question.type === "choice") return answer === question.answer;
   const typed = normalizeAnswer(answer);
   const expected = normalizeAnswer(question.answer);
@@ -23,7 +22,6 @@ export function evaluate(question, answer) {
 }
 
 export function makeQuestion(entry, { mode = "choice", direction = "en-de", rng = Math.random } = {}) {
-  if (entry?.group === "abc") throw new Error("ABC ist nur zum Entdecken und Anhören da.");
   if (!WORDS.includes(entry)) throw new Error("Unknown word");
   if (mode === "spelling") return { id: entry.id, group: entry.group, type: "spelling", prompt: `Schreibe auf Englisch: ${entry.de}`, answer: entry.en, hint: "Groß-/Kleinschreibung und Leerzeichen sind egal. Achte auf die Buchstaben." };
   const key = direction === "de-en" ? "en" : "de";
@@ -37,7 +35,6 @@ export function makeQuestion(entry, { mode = "choice", direction = "en-de", rng 
 }
 
 export function createRound({ group = "all", mode = "choice", missed = [], rng = Math.random, size = 8 } = {}) {
-  if (group === "abc") throw new Error("ABC ist nur zum Entdecken und Anhören da.");
   const pool = group === "all" ? WORDS : WORDS.filter((item) => item.group === group);
   if (!pool.length || !["all", "classroom", "family", "animals"].includes(group)) throw new Error("Unknown group");
   const selected = missed.length ? pool.filter((item) => missed.includes(item.id)) : pool;

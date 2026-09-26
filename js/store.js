@@ -1,8 +1,8 @@
 import { BY_ID } from "./data.js";
 
 export const KEY = "word-garden-progress";
-export const SCHEMA = 2;
-const empty = () => ({ schema: SCHEMA, stats: {}, answers: 0 });
+export const SCHEMA = 3;
+const empty = () => ({ schema: SCHEMA, stats: {}, answers: 0, discovered: [] });
 const count = (value) => Number.isSafeInteger(value) && value >= 0 ? Math.min(value, 1000000) : 0;
 
 // Keep recognized IDs only. Old v1 records used seen/right/wrong; v2 uses attempts/correct/missed.
@@ -18,6 +18,7 @@ export function migrate(raw) {
     const missed = Math.min(attempts - correct, count(value.missed ?? value.wrong));
     if (attempts) result.stats[id] = { attempts, correct, missed };
   }
+  if (Array.isArray(raw.discovered)) result.discovered = [...new Set(raw.discovered.filter((id) => typeof id === "string" && BY_ID.has(id)))];
   result.answers = count(raw.answers ?? Object.values(result.stats).reduce((sum, s) => sum + s.attempts, 0));
   return result;
 }
@@ -49,6 +50,11 @@ export function createStore(storage) {
     get state() { return state; },
     get notice() { return notice; },
     get missedIds() { return Object.entries(state.stats).filter(([, s]) => s.missed > 0).map(([id]) => id); },
+    discover(id) {
+      if (!BY_ID.has(id) || state.discovered.includes(id)) return;
+      state.discovered.push(id);
+      save();
+    },
     record(id, right) {
       if (!BY_ID.has(id)) return;
       const prior = state.stats[id] || { attempts: 0, correct: 0, missed: 0 };

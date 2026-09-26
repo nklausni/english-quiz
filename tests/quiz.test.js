@@ -1,12 +1,13 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { ALL, LETTERS, WORDS, GROUPS } from "../js/data.js";
+import { ALL, WORDS, GROUPS } from "../js/data.js";
 import { createRound, makeQuestion, evaluate, normalizeAnswer } from "../js/quiz.js";
 import { createStore, migrate, KEY, SCHEMA } from "../js/store.js";
 
 test("curated content: coverage, unique IDs and translations", () => {
-  assert.equal(LETTERS.length, 26);
-  assert.equal(LETTERS.map((l) => l.en).join(""), "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+  assert.deepEqual(Object.keys(GROUPS), ["classroom", "family", "animals"]);
+  assert.equal(ALL.length, WORDS.length);
+  assert.ok(ALL.every((word) => word.group !== "abc"));
   assert.equal(new Set(ALL.map((w) => w.id)).size, ALL.length);
   for (const key of ["classroom", "family", "animals"]) assert.ok(WORDS.filter((w) => w.group === key).length >= 15);
   assert.deepEqual(new Set(ALL.map((w) => w.group)), new Set(Object.keys(GROUPS)));
@@ -30,18 +31,16 @@ test("all word questions offer four distinct answers and both directions", () =>
   }
 });
 
-test("ABC is discovery-only: letters cannot become quiz questions", () => {
-  for (const entry of LETTERS) for (const mode of ["choice", "spelling", "mixed"]) {
-    assert.throws(() => makeQuestion(entry, { mode }), /ABC.*nur.*Entdecken/i);
-  }
+test("removed alphabet is absent from all rounds, even with legacy misses", () => {
   for (const mode of ["choice", "spelling", "mixed"]) {
-    assert.throws(() => createRound({ group: "abc", mode }), /ABC.*nur.*Entdecken/i);
+    assert.throws(() => createRound({ group: "abc", mode }), /Unknown group/);
     const all = createRound({ group: "all", mode, size: ALL.length });
     assert.equal(all.length, WORDS.length);
     assert.ok(all.every((q) => q.group !== "abc"));
-    const review = createRound({ group: "all", mode, missed: [LETTERS[0].id, WORDS[0].id] });
+    const review = createRound({ group: "all", mode, missed: ["abc-a", WORDS[0].id] });
     assert.deepEqual(review.map((q) => q.id), [WORDS[0].id]);
   }
+  assert.throws(() => makeQuestion({ id: "abc-a", group: "abc", en: "A", de: "A" }), /Unknown word/);
 });
 
 test("spelling accepts casing, whitespace, curly apostrophe and terminal punctuation; not misspellings", () => {
@@ -75,8 +74,26 @@ test("migration preserves known counts, drops unknown IDs and protects newer sch
   assert.ok(!("madeup" in old.stats));
   assert.equal(migrate({ schema: SCHEMA + 1 }), null);
   assert.deepEqual(migrate({ stats: { [id]: { attempts: -5, correct: 7 } } }).stats, {});
-  const letter = LETTERS[0].id;
-  assert.deepEqual(migrate({ schema: 1, stats: { [letter]: { seen: 3, right: 1, wrong: 2 } } }).stats[letter], { attempts: 3, correct: 1, missed: 2 });
+  assert.deepEqual(migrate({ schema: 2, stats: { "abc-a": { attempts: 3, correct: 1, missed: 2 }, [id]: { attempts: 1, correct: 1, missed: 0 } }, answers: 4 }).stats, { [id]: { attempts: 1, correct: 1, missed: 0 } });
+});
+
+test("discovery progress saves each word once without counting it as an answer", () => {
+  const data = new Map();
+  const storage = { getItem: (key) => data.get(key) ?? null, setItem: (key, value) => data.set(key, value), removeItem: (key) => data.delete(key) };
+  const id = WORDS[0].id;
+  let store = createStore(storage);
+  store.discover(id);
+  store.discover(id);
+  store.discover("abc-a");
+  assert.deepEqual(store.state.discovered, [id]);
+  assert.equal(store.state.answers, 0);
+  store = createStore(storage);
+  assert.deepEqual(store.state.discovered, [id]);
+  store.record(id, true);
+  assert.deepEqual(store.state.discovered, [id]);
+  assert.equal(store.state.answers, 1);
+  assert.ok(store.reset());
+  assert.deepEqual(store.state.discovered, []);
 });
 
 test("persistence records, repeats missed words, resets, and survives corrupt or blocked storage", () => {
