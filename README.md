@@ -12,7 +12,7 @@ Dann http://localhost:8742/ im Browser öffnen. JavaScript-Module und Service Wo
 
 ## Lernen
 
-- Thema wählen: Klassenzimmer, Familie oder Tiere; alternativ alle Themen.
+- Thema wählen: Klassenzimmer, Familie, Tiere oder Alltag; alternativ alle Themen. Die drei handschriftlichen Schulwortlisten sind abgeglichen: 10 von 44 englischen Einträgen waren bereits vorhanden, 34 wurden ergänzt. Bestehende Einträge behalten ihre IDs und den gespeicherten Fortschritt. Auf dem dritten Foto wurde „care“ wörtlich als „Fürsorge“ verstanden (nicht „car“); „big city“ ist ein Eintrag. „lineal“ auf dem zweiten Foto wurde als deutsche Angabe zum bereits vorhandenen „ruler“ eingeordnet.
 - Entdecken: Karte für Karte lesen, deutsche Bedeutung sehen und auf Wunsch Englisch oder Deutsch vorlesen lassen. Die letzte Karte hat einen „Fertig“-Knopf mit Abschlussansicht und Einstieg ins Wörter-Quiz. Angesehene Wörter zählen zum lokal gespeicherten Entdeckungsfortschritt, ohne als richtige Quizantworten zu gelten. Vorlesen verwendet die Systemstimmen des Browsers; ohne passende Stimme wird die Standardsprache des Geräts versucht. Ohne Web Speech geht es ohne Ton weiter.
 - Wörter-Quiz: Vier eindeutige Antworten, abwechselnd Englisch → Deutsch und Deutsch → Englisch.
 - Schreiben: Aus einer deutschen Vorgabe das englische Wort selbst schreiben. Groß-/Kleinschreibung, extra Leerzeichen, typografische Apostrophe und abschließende Satzzeichen werden toleriert; fehlende Buchstaben oder Apostrophe nicht.
@@ -24,7 +24,7 @@ Bei manchen Wörtern gibt es mehrere mögliche Übersetzungen: Diese Liste verwe
 
 ## Wortliste ändern
 
-`js/data.js` enthält Paare `["English", "Deutsch"]` in `rows.classroom`, `rows.family`, `rows.animals`. Neue Einträge am Ende einer Themenliste anhängen (die IDs basieren auf der Listenposition; Umordnen oder Einfügen mitten in die Liste würde gespeicherten Fortschritt falschen Wörtern zuordnen). Beide Übersetzungen müssen eindeutig bleiben, auch über Themen hinweg. Tests nach Änderungen ausführen. Beim Veröffentlichen von Änderungen an Offline-Dateien die Cache-Version in `sw.js` erhöhen, damit bereits installierte Geräte aktualisiert werden.
+`js/data.js` enthält Paare `["English", "Deutsch"]` in `rows.classroom`, `rows.family`, `rows.animals`, `rows.everyday`. Neue Einträge am Ende einer Themenliste anhängen (die IDs basieren auf der Listenposition; Umordnen oder Einfügen mitten in die Liste würde gespeicherten Fortschritt falschen Wörtern zuordnen). Beide Übersetzungen müssen eindeutig bleiben, auch über Themen hinweg. Tests nach Änderungen ausführen. Beim Veröffentlichen von Änderungen an Offline-Dateien die Cache-Version in `sw.js` erhöhen, damit bereits installierte Geräte aktualisiert werden.
 
 ## GitHub Pages
 

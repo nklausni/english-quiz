@@ -5,11 +5,12 @@ import { createRound, makeQuestion, evaluate, normalizeAnswer } from "../js/quiz
 import { createStore, migrate, KEY, SCHEMA } from "../js/store.js";
 
 test("curated content: coverage, unique IDs and translations", () => {
-  assert.deepEqual(Object.keys(GROUPS), ["classroom", "family", "animals"]);
+  assert.deepEqual(Object.keys(GROUPS), ["classroom", "family", "animals", "everyday"]);
   assert.equal(ALL.length, WORDS.length);
   assert.ok(ALL.every((word) => word.group !== "abc"));
   assert.equal(new Set(ALL.map((w) => w.id)).size, ALL.length);
   for (const key of ["classroom", "family", "animals"]) assert.ok(WORDS.filter((w) => w.group === key).length >= 15);
+  assert.ok(WORDS.filter((w) => w.group === "everyday").length >= 8);
   assert.deepEqual(new Set(ALL.map((w) => w.group)), new Set(Object.keys(GROUPS)));
   for (const word of ALL) {
     assert.ok(word.en.trim() && word.de.trim());
@@ -55,7 +56,7 @@ test("spelling accepts casing, whitespace, curly apostrophe and terminal punctua
 });
 
 test("rounds use selected theme, mix modes and do not repeat initial items", () => {
-  for (const group of ["classroom", "family", "animals"]) for (const mode of ["choice", "spelling", "mixed"]) {
+  for (const group of Object.keys(GROUPS)) for (const mode of ["choice", "spelling", "mixed"]) {
     const round = createRound({ group, mode });
     assert.equal(round.length, 8);
     assert.equal(new Set(round.map((q) => q.id)).size, 8);

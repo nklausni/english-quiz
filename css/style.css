@@ -25,6 +25,8 @@
 @media(max-height:620px){.quiz-layout .site-header{height:48px}.quiz-layout .meter{margin-bottom:8px}.quiz-layout .section-heading{margin-bottom:8px}.quiz-layout .question-card{margin-bottom:10px}.quiz-layout .choices{gap:5px}.quiz-layout .choice{min-height:48px}}
 
 @media(max-width:649px){
+.group-picker{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));overflow:visible;padding:3px 0 8px}
+.group-picker .chip{white-space:normal;display:flex;flex-direction:column;justify-content:center;text-align:center;gap:1px;padding:7px 4px;min-height:48px;font-size:10px;line-height:1.15}
 .learn-layout .site-header{height:50px}
 .learn-layout .header-tag,.learn-layout .site-footer,.learn-layout .tip{display:none}
 .learn-layout .subnav{margin:0 0 8px}

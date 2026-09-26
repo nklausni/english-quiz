@@ -42,13 +42,15 @@ test("home → theme → learn → quiz → feedback → result and reset", asyn
   assert.match(app.innerHTML, /Wörter wachsen/);
   assert.match(app.innerHTML, /Schulbuch/);
   assert.doesNotMatch(app.innerHTML, /data-value="abc"|03 THEMEN \+ ABC/);
-  assert.match(app.innerHTML, /1 von 69/);
+  assert.match(app.innerHTML, /04 THEMEN/);
+  assert.match(app.innerHTML, /data-value="everyday"/);
+  assert.match(app.innerHTML, new RegExp(`1 von ${WORDS.length}`));
   click("learn");
-  assert.match(app.innerHTML, /WORT 1 \/ 69/);
+  assert.match(app.innerHTML, new RegExp(`WORT 1 / ${WORDS.length}`));
   assert.match(app.innerHTML, /Englisch anhören/);
   assert.deepEqual(JSON.parse(saved.get(KEY)).discovered, [WORDS[0].id]);
   click("home");
-  assert.match(app.innerHTML, /1 von 69/);
+  assert.match(app.innerHTML, new RegExp(`1 von ${WORDS.length}`));
   click("group", "all");
   assert.match(app.innerHTML, /1 Wort wartet/);
   click("review");
@@ -112,12 +114,13 @@ test("discovery reaches a finish screen after its last word and keeps a completi
   assert.match(app.innerHTML, /data-action="finish-learn"/);
   click("finish-learn");
   assert.match(app.innerHTML, /Entdecken abgeschlossen/);
-  assert.match(app.innerHTML, /23 von 23 Wörtern/);
+  const animalCount = WORDS.filter((word) => word.group === "animals").length;
+  assert.match(app.innerHTML, new RegExp(`${animalCount} von ${animalCount} Wörtern`));
   assert.match(app.innerHTML, /data-action="home"/);
   assert.match(app.innerHTML, /data-action="start" data-value="choice"/);
   click("home");
-  assert.match(app.innerHTML, /23 von 69/);
-  assert.equal(JSON.parse(saved.get(KEY)).discovered.length, 23);
+  assert.match(app.innerHTML, new RegExp(`${animalCount} von ${WORDS.length}`));
+  assert.equal(JSON.parse(saved.get(KEY)).discovered.length, animalCount);
 });
 
 test("discovery layout keeps the finish action within a compact mobile card", () => {
@@ -127,6 +130,12 @@ test("discovery layout keeps the finish action within a compact mobile card", ()
   assert.match(css, /\.learn-layout\s+\.flashcard\s*\{[^}]*min-height:\s*0/);
   assert.match(css, /\.learn-layout\s+\.card-nav\s*\{[^}]*margin-top:/);
   assert.match(css, /@media\(max-width:359px\)[\s\S]*?\.learn-layout\s+\.flashcard\s*\{[^}]*padding:\s*12px/);
+});
+
+test("all four themes are available without horizontal swiping on mobile", () => {
+  const css = readFileSync(new URL("../css/style.css", import.meta.url), "utf8");
+  assert.match(css, /@media\(max-width:649px\)[\s\S]*?\.group-picker\s*\{[^}]*grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\)/);
+  assert.match(css, /@media\(max-width:649px\)[\s\S]*?\.group-picker \.chip\s*\{[^}]*white-space:\s*normal/);
 });
 
 test("quiz viewport DOM/CSS contract: compact chrome, tappable options, collapsed answers and offline update", () => {
@@ -140,7 +149,7 @@ test("quiz viewport DOM/CSS contract: compact chrome, tappable options, collapse
   assert.match(css, /\.quiz-layout\s+\.choice\s*\{[^}]*min-height:\s*(?:48|[5-9]\d)px/);
   assert.match(css, /\.quiz-layout\s+\.question-card\s*\{[^}]*min-height:\s*(?:0|[1-9]\d)px/);
   assert.match(css, /\.quiz-layout\s+\.site-footer\s*\{[^}]*display:\s*none/);
-  assert.match(sw, /const VERSION = "word-garden-v3"/);
+  assert.match(sw, /const VERSION = "word-garden-v4"/);
 });
 
 test("legacy alphabet misses disappear from the app after migrating progress", async () => {
@@ -156,7 +165,7 @@ test("legacy alphabet misses disappear from the app after migrating progress", a
   globalThis.location = { protocol: "http:", hostname: "example.invalid" };
   await import("../js/app.js?abc-only");
   assert.doesNotMatch(app.innerHTML, /data-action="review"/);
-  assert.match(app.innerHTML, /0 von 69/);
+  assert.match(app.innerHTML, new RegExp(`0 von ${WORDS.length}`));
   assert.doesNotMatch(app.innerHTML, /data-value="abc"/);
   const learnButton = { dataset: { action: "learn" }, disabled: false, closest() { return this; } };
   handlers.get("click")({ target: learnButton });

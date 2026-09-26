@@ -1,4 +1,4 @@
-import { WORDS } from "./data.js";
+import { WORDS, GROUPS } from "./data.js";
 
 export function shuffle(items, rng = Math.random) {
   const copy = [...items];
@@ -36,7 +36,7 @@ export function makeQuestion(entry, { mode = "choice", direction = "en-de", rng 
 
 export function createRound({ group = "all", mode = "choice", missed = [], rng = Math.random, size = 8 } = {}) {
   const pool = group === "all" ? WORDS : WORDS.filter((item) => item.group === group);
-  if (!pool.length || !["all", "classroom", "family", "animals"].includes(group)) throw new Error("Unknown group");
+  if (!pool.length || (group !== "all" && !Object.hasOwn(GROUPS, group))) throw new Error("Unknown group");
   const selected = missed.length ? pool.filter((item) => missed.includes(item.id)) : pool;
   const entries = shuffle(selected, rng).slice(0, Math.min(size, selected.length));
   return entries.map((entry, i) => {

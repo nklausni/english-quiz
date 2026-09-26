@@ -1,4 +1,4 @@
-const VERSION = "word-garden-v3";
+const VERSION = "word-garden-v4";
 const ASSETS = ["./", "./index.html", "./css/style.css", "./js/app.js", "./js/data.js", "./js/quiz.js", "./js/store.js", "./manifest.webmanifest", "./icons/icon.svg", "./icons/icon-192.png", "./icons/icon-512.png"];
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(VERSION).then((cache) => cache.addAll(ASSETS)).then(() => self.skipWaiting()));
